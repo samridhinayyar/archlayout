@@ -4,6 +4,8 @@ import json
 import time
 import copy
 import math
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -127,7 +129,7 @@ MATERIAL_REGISTRY = {
 }
 
 # ==============================================================================
-# 3. AI REASONING & REFERENCE BLUEPRINT PARSER ENGINE
+# 3. REFERENCE BLUEPRINT PARSER ENGINE
 # ==============================================================================
 def render_pdf_to_image(file_bytes):
     try:
@@ -159,7 +161,6 @@ def render_pdf_to_image(file_bytes):
         return None
 
 def analyze_reference_blueprint(reference_img):
-    """Performs geometric computer vision and spatial topology analysis on reference drawing."""
     if reference_img is None:
         return {"detected": False, "aspect": 1.6, "room_count": 6, "circulation_spine": True}
     
@@ -167,7 +168,6 @@ def analyze_reference_blueprint(reference_img):
     h, w = img_arr.shape
     aspect = float(w) / float(max(1, h))
     
-    # Estimate boundary distribution & density
     edge_density = float(np.mean(img_arr < 120))
     estimated_rooms = 4 if edge_density < 0.15 else (5 if edge_density < 0.25 else 6)
     
@@ -175,39 +175,31 @@ def analyze_reference_blueprint(reference_img):
         "detected": True,
         "width_px": w,
         "height_px": h,
-        "aspect": np.clip(aspect, 0.9, 2.2),
+        "aspect": float(np.clip(aspect, 0.9, 2.2)),
         "room_count": estimated_rooms,
         "circulation_spine": True,
         "inferred_zoning": "Triple-Bay Longitudinal"
     }
 
 # ==============================================================================
-# 4. PROCEDURAL MULTI-PART 3D ARCHITECTURAL ASSEMBLIES GENERATOR
+# 4. PROCEDURAL MULTI-PART 3D ARCHITECTURAL ASSEMBLIES
 # ==============================================================================
 def generate_architectural_assembly(elem_type, x, y, z, w, l, h, color, rotation_deg=0.0):
-    """
-    Creates real multi-part detailed architectural assemblies with true geometry
-    (frames, moldings, reveals, cushions, worktops, handles) rather than primitive cubes.
-    """
     sub_meshes = []
     
     if elem_type == "bed_suite":
-        # 1. Solid plinth frame
         base = trimesh.creation.box(extents=[w, l, 0.25])
         base.apply_translation([x, y, z + 0.125])
         sub_meshes.append(base)
         
-        # 2. Tufted Mattress
         mattress = trimesh.creation.box(extents=[w * 0.94, l * 0.92, 0.32])
         mattress.apply_translation([x, y - l * 0.02, z + 0.25 + 0.16])
         sub_meshes.append(mattress)
         
-        # 3. Fluted Upholstered Headboard
         headboard = trimesh.creation.box(extents=[w * 1.08, 0.18, 1.25])
         headboard.apply_translation([x, y + l * 0.48, z + 0.625])
         sub_meshes.append(headboard)
         
-        # 4 & 5. Left & Right Nightstands with Brass Handles
         ns_left = trimesh.creation.box(extents=[0.55, 0.45, 0.50])
         ns_left.apply_translation([x - w * 0.5 - 0.35, y + l * 0.35, z + 0.25])
         sub_meshes.append(ns_left)
@@ -217,38 +209,31 @@ def generate_architectural_assembly(elem_type, x, y, z, w, l, h, color, rotation
         sub_meshes.append(ns_right)
 
     elif elem_type == "sectional_sofa":
-        # 1. Main Base
         seat_base = trimesh.creation.box(extents=[w, l * 0.65, 0.22])
         seat_base.apply_translation([x, y, z + 0.11])
         sub_meshes.append(seat_base)
         
-        # 2. Backrest Cushion Wall
         backrest = trimesh.creation.box(extents=[w, 0.25, 0.55])
         backrest.apply_translation([x, y + l * 0.22, z + 0.45])
         sub_meshes.append(backrest)
         
-        # 3. Chaise Extension
         chaise = trimesh.creation.box(extents=[w * 0.35, l * 0.75, 0.38])
         chaise.apply_translation([x + w * 0.32, y - l * 0.32, z + 0.19])
         sub_meshes.append(chaise)
         
-        # 4. Low Marble Coffee Table
         table = trimesh.creation.box(extents=[w * 0.5, l * 0.4, 0.32])
         table.apply_translation([x - w * 0.15, y - l * 0.5, z + 0.16])
         sub_meshes.append(table)
 
     elif elem_type == "chef_kitchen_island":
-        # 1. Base Cabinet Box with Kickplate
         cabinet_body = trimesh.creation.box(extents=[w * 0.95, l * 0.92, h * 0.88])
         cabinet_body.apply_translation([x, y, z + h * 0.44])
         sub_meshes.append(cabinet_body)
         
-        # 2. Waterfall Polished Marble Countertop
         countertop = trimesh.creation.box(extents=[w, l, 0.08])
         countertop.apply_translation([x, y, z + h - 0.04])
         sub_meshes.append(countertop)
         
-        # 3 & 4. Flanking Waterfall Side Panels
         waterfall_l = trimesh.creation.box(extents=[0.08, l, h])
         waterfall_l.apply_translation([x - w * 0.5 + 0.04, y, z + h * 0.5])
         sub_meshes.append(waterfall_l)
@@ -258,28 +243,23 @@ def generate_architectural_assembly(elem_type, x, y, z, w, l, h, color, rotation
         sub_meshes.append(waterfall_r)
 
     elif elem_type == "luxury_bathroom_vanity":
-        # 1. Floating Stone Vanity Counter
         vanity = trimesh.creation.box(extents=[w, l, 0.42])
         vanity.apply_translation([x, y, z + 0.55])
         sub_meshes.append(vanity)
         
-        # 2. Undermount Ceramic Basin Reveal
         basin = trimesh.creation.box(extents=[w * 0.5, l * 0.65, 0.18])
         basin.apply_translation([x, y, z + 0.72])
         sub_meshes.append(basin)
         
-        # 3. Frameless Backlit Mirror
         mirror = trimesh.creation.box(extents=[w * 0.9, 0.04, 1.1])
         mirror.apply_translation([x, y + l * 0.48, z + 1.45])
         sub_meshes.append(mirror)
 
     elif elem_type == "swimming_pool":
-        # 1. Sunken Water Body
         pool_water = trimesh.creation.box(extents=[w, l, 0.25])
         pool_water.apply_translation([x, y, z + 0.12])
         sub_meshes.append(pool_water)
         
-        # 2. Surrounding Stone Coping Deck
         coping = trimesh.creation.box(extents=[w + 1.2, l + 1.2, 0.06])
         coping.apply_translation([x, y, z + 0.03])
         sub_meshes.append(coping)
@@ -292,7 +272,7 @@ def generate_architectural_assembly(elem_type, x, y, z, w, l, h, color, rotation
     return trimesh.util.concatenate(sub_meshes) if sub_meshes else None
 
 # ==============================================================================
-# 5. UNIFIED PROJECT STATE & 2D/3D GEOMETRY PIPELINE
+# 5. LOCAL UNIFIED PROJECT GEOMETRY ENGINE
 # ==============================================================================
 def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island, ref_data=None):
     uw = pw
@@ -314,7 +294,7 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
     furniture = []
     walking_trails = []
 
-    # Front Zone (Outdoor Terrace & Guest Suite 01)
+    # Front Zone
     balcony_l = max(1.5, ul * 0.08)
     rooms.append({
         "id": "BALC_FRONT", "name": "FRONT BALCONY",
@@ -353,7 +333,7 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
         "floor_mat": "Italian Botticino Marble", "wall_mat": "Fluted Walnut Wood", "ceiling_h": 3.6
     })
 
-    # Central Zone (Kitchen in SE Agni, Staircase in NW, 7'-0" Galleria Spine)
+    # Middle Zone
     mid_y = front_y + front_avail_l
     mid_l = ul * 0.38
 
@@ -386,9 +366,9 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
 
     step_ys = np.linspace(mid_y + kitchen_l + 0.35, mid_y + mid_l - 0.35, 8)
     for s_y in step_ys:
-        stairs.append({"x1": 0.2, "x2": w_bay_left * 0.8, "y": s_y})
+        stairs.append({"x1": 0.2, "x2": float(w_bay_left * 0.8), "y": float(s_y)})
 
-    passage_w = max(2.13, uw * 0.12)  # 7'-0" clear primary spine
+    passage_w = max(2.13, uw * 0.12)
     rooms.append({
         "id": "CORRIDOR_MAIN", "name": "7'-0\" GALLERIA SPINE",
         "x": w_bay_left, "y": mid_y, "w": passage_w, "l": mid_l, "zone": "Circulation",
@@ -439,7 +419,7 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
             "floor_mat": "Polished Burma Teak", "wall_mat": "Fluted Walnut Wood", "ceiling_h": 3.6
         })
 
-    # Rear Zone (Master Suite Royale in Nairrutya SW)
+    # Rear Zone
     rear_y = mid_y + mid_l
     rear_l = ul - (balcony_l + front_avail_l + mid_l)
     rear_balcony_l = max(1.2, rear_l * 0.22)
@@ -499,11 +479,11 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
         "floor_mat": "Emerald Lawn Grass", "wall_mat": "White Gypsum Plaster", "ceiling_h": 3.0
     })
 
-    # Calculations
+    # Metric & Imperial Footprints
     for r in rooms:
         r["dims"] = f"{to_feet_inches(r['w'])} X {to_feet_inches(r['l'])}"
-        r["area_sqm"] = r["w"] * r["l"]
-        r["area_sqft"] = r["area_sqm"] * 10.7639
+        r["area_sqm"] = float(r["w"] * r["l"])
+        r["area_sqft"] = float(r["area_sqm"] * 10.7639)
 
     col_pts = [
         (0.0, uy), (w_bay_left, uy), (uw - 0.35, uy),
@@ -527,7 +507,6 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
         {"cx": uw * 0.75, "cy": uy + ul, "w": max(2.0, uw * 0.20), "h": 2.1, "sill": 0.6, "tag": "W3", "loc": "Bedroom 03 Fenestration"}
     ]
 
-    # Detailed Furniture & Assembly Specifications
     mb_x = wardrobe_corridor_w + m_bed_w * 0.55
     mb_y = rear_y + rear_l * 0.35
     furniture.extend([
@@ -543,11 +522,11 @@ def compile_unified_project(pw, pl, sf, sr, scheme_id, bhk_mode, curved, island,
         "rooms": rooms, "stairs": stairs, "doors": doors,
         "windows": windows, "columns": columns, "curves": curves,
         "furniture": furniture, "trails": walking_trails,
-        "pw": pw, "pl": pl, "sf": sf, "sr": sr, "h": 3.4
+        "pw": float(pw), "pl": float(pl), "sf": float(sf), "sr": float(sr), "h": 3.4
     }
 
 # ==============================================================================
-# 6. PROCEDURAL 3D MESH BUILDER (REAL WALLS, FENESTRATIONS & ASSEMBLIES)
+# 6. PROCEDURAL 3D MESH BUILDER
 # ==============================================================================
 def construct_3d_spatial_model(rooms, windows, furniture, h=3.4):
     meshes = []
@@ -557,7 +536,6 @@ def construct_3d_spatial_model(rooms, windows, furniture, h=3.4):
     for r in rooms:
         x, y, w, l = r["x"], r["y"], r["w"], r["l"]
         
-        # Real Walls with Thickness
         wall_specs = [
             ([w + ext_t, ext_t, h], [x + w / 2.0, y, h / 2.0]),
             ([w + ext_t, ext_t, h], [x + w / 2.0, y + l, h / 2.0]),
@@ -569,18 +547,15 @@ def construct_3d_spatial_model(rooms, windows, furniture, h=3.4):
             b.apply_translation(center)
             meshes.append(b)
 
-        # Floor Slab
         floor = trimesh.creation.box(extents=[w, l, 0.08])
         floor.apply_translation([x + w / 2.0, y + l / 2.0, 0.04])
         meshes.append(floor)
 
-    # Windows Cutouts & Glass Panes
     for win in windows:
         glaze = trimesh.creation.box(extents=[win["w"], ext_t * 0.5, win["h"]])
         glaze.apply_translation([win["cx"], win["cy"], win["sill"] + win["h"] / 2.0])
         meshes.append(glaze)
 
-    # Multi-Part Detailed Architectural Furniture Assemblies
     for f in furniture:
         elem_mesh = generate_architectural_assembly(
             f["type"], f["x"], f["y"], f.get("z", 0.0), f["w"], f["l"], f["h"], f.get("color", "#000000")
@@ -602,7 +577,7 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
 
     cx = rx + rw / 2.0 + cam_offset[0]
     cy = ry + rl / 2.0 + cam_offset[1]
-    cz = 1.60  # Human eye level calibrated at 1.60m
+    cz = 1.60
 
     fig_360 = go.Figure()
 
@@ -619,7 +594,6 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
         floor_c = MATERIAL_REGISTRY.get(room_data.get("floor_mat", ""), {}).get("color", "#CBD5E1")
         ceil_c = "#FFFFFF"
 
-    # Floor Quad
     fig_360.add_trace(go.Mesh3d(
         x=[rx, rx + rw, rx + rw, rx],
         y=[ry, ry, ry + rl, ry + rl],
@@ -628,7 +602,6 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
         color=floor_c, opacity=1.0, name="Flooring", flatshading=True
     ))
 
-    # Ceiling Quad
     fig_360.add_trace(go.Mesh3d(
         x=[rx, rx + rw, rx + rw, rx],
         y=[ry, ry, ry + rl, ry + rl],
@@ -637,7 +610,6 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
         color=ceil_c, opacity=1.0, name="Ceiling", flatshading=True
     ))
 
-    # Perimeter Walls
     for wx, wy, wz in [
         ([rx, rx + rw, rx + rw, rx], [ry + rl, ry + rl, ry + rl, ry + rl], [0.0, 0.0, rh, rh]),
         ([rx, rx + rw, rx + rw, rx], [ry, ry, ry, ry], [0.0, 0.0, rh, rh]),
@@ -650,7 +622,6 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
             color=wall_c, opacity=0.96, flatshading=True
         ))
 
-    # Real Assemblies inside this room
     for f in cur_scheme.get("furniture", []):
         if (rx <= f["x"] <= rx + rw) and (ry <= f["y"] <= ry + rl):
             fx, fy, fw, fl_dim, fh, fz = f["x"], f["y"], f["w"], f["l"], f.get("h", 0.8), f.get("z", 0.0)
@@ -666,7 +637,6 @@ def render_360_environment_projection(room_data, cur_scheme, cam_offset=(0.0, 0.
                 name=f["name"], flatshading=True
             ))
 
-    # Room-to-Room Teleport Hotspots
     for other in cur_scheme["rooms"]:
         if other["id"] != room_data["id"] and other.get("zone") != "Outdoor":
             ox = other["x"] + other["w"] / 2.0
@@ -710,12 +680,12 @@ def draw_exact_blueprint(layout_data, show_trails=True):
     sf = layout_data["sf"]
     sr = layout_data["sr"]
     rooms = layout_data["rooms"]
-    stairs = layout_data["stairs"]
-    doors = layout_data["doors"]
-    windows = layout_data["windows"]
-    columns = layout_data["columns"]
-    curves = layout_data["curves"]
-    trails = layout_data["trails"]
+    stairs = layout_data.get("stairs", [])
+    doors = layout_data.get("doors", [])
+    windows = layout_data.get("windows", [])
+    columns = layout_data.get("columns", [])
+    curves = layout_data.get("curves", [])
+    trails = layout_data.get("trails", [])
     furniture = layout_data.get("furniture", [])
 
     fig, ax = plt.subplots(figsize=(10, 18), dpi=150)
@@ -749,7 +719,6 @@ def draw_exact_blueprint(layout_data, show_trails=True):
         ax.text(cx, cy + 0.35, r["name"], ha="center", va="center", fontsize=6.5, weight="bold", color=font_col)
         ax.text(cx, cy - 0.35, r["dims"], ha="center", va="center", fontsize=5.8, color="#475569")
 
-    # Detailed Furniture Layer in Plan
     for f in furniture:
         ax.add_patch(patches.Rectangle((f["x"] - f["w"]/2.0, f["y"] - f["l"]/2.0), f["w"], f["l"], linewidth=0.8, edgecolor="#6366F1", facecolor="#EEF2FF", alpha=0.75))
         ax.text(f["x"], f["y"], f["name"], ha="center", va="center", fontsize=4.6, color="#4338CA")
@@ -862,7 +831,7 @@ with st.sidebar.expander("🌐 360° MODEL GENERATION", expanded=True):
         st.rerun()
 
 with st.sidebar.expander("📄 Reference Plan (PDF/IMG)", expanded=True):
-    uploaded_file = st.file_uploader("Upload Blueprint Reference[cite: 1]:", type=["pdf", "png", "jpg", "jpeg"])
+    uploaded_file = st.file_uploader("Upload Blueprint Reference:", type=["pdf", "png", "jpg", "jpeg"])
     reference_image = None
     ref_data = {"detected": False, "aspect": 1.6}
     if uploaded_file is not None:
@@ -1193,8 +1162,8 @@ elif "Vastu" in selected_view:
 # ------------------------------------------------------------------------------
 elif "Reports" in selected_view:
     rooms = active_scheme["rooms"]
-    doors = active_scheme["doors"]
-    windows = active_scheme["windows"]
+    doors = active_scheme.get("doors", [])
+    windows = active_scheme.get("windows", [])
 
     gross_built_up_sqm = sum(r["area_sqm"] for r in rooms)
     gross_built_up_sqft = gross_built_up_sqm * 10.7639
@@ -1274,11 +1243,11 @@ elif "Reports" in selected_view:
     # REPORT 5: GFC CHECKLIST
     st.markdown("### 5. Structural & Good-For-Construction (GFC) Checklist")
     st.markdown("""
-    * **External Thermal Envelopes:** Continuous 9\" (0.23m) load-bearing cavity brickwork verified along all exterior perimeters[cite: 1].
-    * **Internal Partitioning:** Space-saving 4.5\" (0.115m) non-structural brick partitions with plaster margins[cite: 1].
-    * **RCC Structural Column Grid:** Uniform 350mm x 450mm columns anchored at major multi-bay wall intersections[cite: 1].
-    * **Circulation Spine Integrity:** Primary central walking corridor maintained at a minimum clear width of 7'-0\"[cite: 1].
-    * **Staircase Engineering:** Rise standardized at 150mm, run (tread) at 280mm, with landing clearances verified[cite: 1].
+    * **External Thermal Envelopes:** Continuous 9\" (0.23m) load-bearing cavity brickwork verified along all exterior perimeters.
+    * **Internal Partitioning:** Space-saving 4.5\" (0.115m) non-structural brick partitions with plaster margins.
+    * **RCC Structural Column Grid:** Uniform 350mm x 450mm columns anchored at major multi-bay wall intersections.
+    * **Circulation Spine Integrity:** Primary central walking corridor maintained at a minimum clear width of 7'-0\".
+    * **Staircase Engineering:** Rise standardized at 150mm, run (tread) at 280mm, with landing clearances verified.
     """)
 
 # ------------------------------------------------------------------------------
@@ -1290,21 +1259,21 @@ elif "Smart AI" in selected_view:
         ai_findings = [
             {
                 "category": "Circulation Bottleneck", "severity": "Medium",
-                "observation": "Uploaded plan reveals hallway pinching under 3'-6\" near stair transition[cite: 1].",
-                "remediation": "Corrected in ARCHI Studio Pro to a continuous 7'-0\" wide unencumbered galleria spine[cite: 1]."
+                "observation": "Uploaded plan reveals hallway pinching under 3'-6\" near stair transition.",
+                "remediation": "Corrected in ARCHI Studio Pro to a continuous 7'-0\" wide unencumbered galleria spine."
             },
             {
                 "category": "Vastu Defect Inversion", "severity": "High",
-                "observation": "Wet toilet shaft detected in the spiritual North-East (Ishanya) corner[cite: 1].",
-                "remediation": "Relocated all bathrooms to the North-West (Vayu) and West sectors for 100% compliance[cite: 1]."
+                "observation": "Wet toilet shaft detected in the spiritual North-East (Ishanya) corner.",
+                "remediation": "Relocated all bathrooms to the North-West (Vayu) and West sectors for 100% compliance."
             },
             {
                 "category": "Fire Element Clash", "severity": "High",
-                "observation": "Kitchen positioned in the North-West zone clashing fire and air energies[cite: 1].",
-                "remediation": "Restored kitchen into the South-East (Agni) zone with cooking counters facing East[cite: 1]."
+                "observation": "Kitchen positioned in the North-West zone clashing fire and air energies.",
+                "remediation": "Restored kitchen into the South-East (Agni) zone with cooking counters facing East."
             }
         ]
-        st.success("Analysis Complete: Uploaded reference drawing audited against target criteria[cite: 1].")
+        st.success("Analysis Complete: Uploaded reference drawing audited against target criteria.")
 
         for finding in ai_findings:
             sev_color = "#DC2626" if finding["severity"] == "High" else "#F59E0B"
@@ -1317,14 +1286,14 @@ elif "Smart AI" in selected_view:
             </div>
             """, unsafe_allow_html=True)
     else:
-        st.info("Upload your previous layout PDF in the sidebar to run the Smart AI Discrepancy & Remediation Audit[cite: 1].")
+        st.info("Upload your previous layout PDF in the sidebar to run the Smart AI Discrepancy & Remediation Audit.")
 
 # ------------------------------------------------------------------------------
 # 18. SOURCE PDF REFERENCE BLUEPRINT VIEW
 # ------------------------------------------------------------------------------
 elif "Reference PDF" in selected_view:
     if reference_image is not None:
-        st.markdown("### Source PDF Reference Blueprint[cite: 1]")
-        st.image(reference_image, use_container_width=True, caption="Uploaded Architectural Reference Drawing[cite: 1]")
+        st.markdown("### Source PDF Reference Blueprint")
+        st.image(reference_image, use_container_width=True, caption="Uploaded Architectural Reference Drawing")
     else:
-        st.info("Upload your reference PDF plan in the sidebar to inspect it side-by-side with the generated schemes[cite: 1].")
+        st.info("Upload your reference PDF plan in the sidebar to inspect it side-by-side with the generated schemes.")
