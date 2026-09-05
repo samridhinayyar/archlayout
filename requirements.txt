@@ -5,3 +5,12 @@ pandas
 scipy
 shapely
 pillow
+svgwrite
+ezdxf
+geopandas
+seaborn
+plotly
+networkx
+scikit-learn
+openpyxl
+requests
