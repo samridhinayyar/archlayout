@@ -14,3 +14,4 @@ networkx
 scikit-learn
 openpyxl
 requests
+trimesh
